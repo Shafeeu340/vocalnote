@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VocalNote — Obsidian Pro Notepad & Natural TTS</title>
+  <meta name="description" content="Distraction-free dark notepad with natural human-like text-to-speech. Write notes and listen hands-free.">
+  <meta name="theme-color" content="#7c3aed">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="VocalNote">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Default Ultra-Dark Obsidian Theme */
+      --bg-app: #030508;
+      --bg-surface: #080b11;
+      --bg-elevated: #0d121c;
+      --bg-subtle: #111724;
+      --bg-hover: #182030;
+      --border: #192233;
+      --border-strong: #243047;
+      --text-primary: #f1f5f9;
+      --text-secondary: #8b9bb4;
+      --text-muted: #526179;
+      --accent: #7c3aed;
+      --accent-hover: #8b5cf6;
+      --accent-glow: rgba(124, 58, 237, 0.25);
+      --accent-soft: rgba(124, 58, 237, 0.14);
+      --danger: #f43f5e;
+      --danger-soft: rgba(244, 63, 94, 0.14);
+      --success: #10b981;
+      --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.6);
+      --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.85);
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --sidebar-width: 320px;
+    }
+
+    [data-theme="midnight"] {
+      /* Pure Pitch-Black OLED Mode */
+      --bg-app: #000000;
+      --bg-surface: #030304;
+      --bg-elevated: #08090c;
+      --bg-subtle: #0c0e13;
+      --bg-hover: #141821;
+      --border: #14171f;
+      --border-strong: #1f2430;
+      --text-primary: #f8fafc;
+      --text-secondary: #7e8b9f;
+      --text-muted: #475264;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --accent-soft: rgba(99, 102, 241, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      scrollbar-width: thin;
+      scrollbar-color: #1e293b transparent;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 99px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+
+    body {
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+      height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--bg-app);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      z-index: 30;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sidebar-header {
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), #4f46e5);
+      color: white;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .icon-btn:hover {
+      background-color: var(--bg-subtle);
+      border-color: var(--border);
+      color: var(--text-primary);
+    }
+
+    .sidebar-actions {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #5b21b6);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px var(--accent-glow);
+      transition: all 0.15s;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--accent-hover), #6d28d9);
+      box-shadow: 0 6px 20px var(--accent-glow);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 12px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-box input {
+      width: 100%;
+      background-color: var(--bg-subtle);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 9px 12px 9px 36px;
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+
+    .search-box input:focus {
+      background-color: var(--bg-elevated);
+      border-color: var(--accent);
+    }
+
+    .notes-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 12px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .note-card {
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .note-card:hover {
+      background-color: var(--bg-subtle);
+      border-color: var(--border);
+    }
+
+    .note-card.active {
+      background-color: var(--accent-soft);
+      border-color: rgba(124, 58, 237, 0.45);
+    }
+
+    .note-card-title {
+      font-weight: 600;
+      font-size: 0.92rem;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-right: 24px;
+    }
+
+    .note-card-preview {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 6px;
+    }
+
+    .note-card-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .delete-note-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      opacity: 0;
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .note-card:hover .delete-note-btn,
+    .note-card.active .delete-note-btn {
+      opacity: 1;
+    }
+
+    .delete-note-btn:hover {
+      background-color: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    /* Main Workspace */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background-color: var(--bg-surface);
+      position: relative;
+      min-width: 0;
+    }
+
+    .topbar {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background-color: var(--bg-app);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mobile-menu-btn {
+      display: none;
+    }
+
+    .save-status {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: var(--success);
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+    }
+
+    /* Voice Studio Toolbar */
+    .voice-bar {
+      background-color: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .voice-controls-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tts-btn {
+      height: 36px;
+      padding: 0 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background-color: var(--bg-subtle);
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tts-btn:hover:not(:disabled) {
+      border-color: var(--accent);
+      background-color: var(--bg-hover);
+      color: #ffffff;
+    }
+
+    .tts-btn.playing {
+      background-color: var(--accent);
+      color: white;
+      border-color: var(--accent);
+      box-shadow: 0 0 14px var(--accent-glow);
+    }
+
+    .tts-btn.playing:hover {
+      background-color: var(--accent-hover);
+      color: white;
+    }
+
+    .tts-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .voice-select-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 210px;
+      max-width: 360px;
+    }
+
+    select.voice-select {
+      width: 100%;
+      height: 36px;
+      padding: 0 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background-color: var(--bg-subtle);
+      color: var(--text-primary);
+      font-size: 0.84rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    select.voice-select:focus {
+      border-color: var(--accent);
+    }
+
+    select.voice-select option {
+      background-color: #0d121c;
+      color: #f1f5f9;
+    }
+
+    .sliders-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-left: auto;
+    }
+
+    .slider-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .slider-item input[type="range"] {
+      width: 72px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    /* Speaking Visualizer */
+    .speaking-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 20px;
+      background-color: var(--accent-soft);
+      color: #c4b5fd;
+      font-size: 0.82rem;
+      font-weight: 500;
+      border-bottom: 1px solid rgba(124, 58, 237, 0.3);
+    }
+
+    .speaking-banner.active {
+      display: flex;
+    }
+
+    .wave-bars {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      height: 14px;
+      margin-right: 8px;
+    }
+
+    .wave-bars span {
+      width: 3px;
+      height: 100%;
+      background-color: #a78bfa;
+      border-radius: 2px;
+      animation: wave 0.9s ease-in-out infinite;
+    }
+
+    .wave-bars span:nth-child(2) { animation-delay: 0.15s; }
+    .wave-bars span:nth-child(3) { animation-delay: 0.3s; }
+    .wave-bars span:nth-child(4) { animation-delay: 0.45s; }
+
+    @keyframes wave {
+      0%, 100% { transform: scaleY(0.35); }
+      50% { transform: scaleY(1); }
+    }
+
+    /* Editor */
+    .editor-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px clamp(20px, 6vw, 72px);
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .note-title-input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: #ffffff;
+      font-size: clamp(1.5rem, 3vw, 2.1rem);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      outline: none;
+      margin-bottom: 16px;
+    }
+
+    .note-title-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .note-body-input {
+      width: 100%;
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: #cbd5e1;
+      font-size: 1.05rem;
+      line-height: 1.75;
+      resize: none;
+      outline: none;
+    }
+
+    .note-body-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .editor-footer {
+      padding: 10px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      background-color: var(--bg-app);
+    }
+
+    /* Mobile Backdrop */
+    .backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 20;
+    }
+
+    .backdrop.show {
+      display: block;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background-color: #1e293b;
+      color: #f8fafc;
+      border: 1px solid var(--border-strong);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      box-shadow: var(--shadow-md);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.25s ease;
+      z-index: 50;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Responsive Mobile Layout */
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        transform: translateX(-100%);
+        width: 84%;
+        max-width: 320px;
+        box-shadow: var(--shadow-md);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .mobile-menu-btn {
+        display: inline-flex;
+      }
+
+      .voice-bar {
+        padding: 10px 14px;
+        gap: 8px;
+      }
+
+      .voice-select-wrap {
+        max-width: 100%;
+        flex: 1 1 100%;
+        order: -1;
+      }
+
+      .sliders-group {
+        margin-left: 0;
+        width: 100%;
+        justify-content: space-between;
+        padding-top: 4px;
+      }
+
+      .editor-container {
+        padding: 20px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="backdrop" id="backdrop"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+        </div>
+        <span>VocalNote</span>
+      </div>
+      <button class="icon-btn" id="themeToggle" title="Switch Obsidian / Pure OLED Black" aria-label="Toggle Black Shade">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18a9 9 0 0 0 0-18Z" fill="currentColor"/></svg>
+      </button>
+    </div>
+
+    <div class="sidebar-actions">
+      <button class="btn-primary" id="newNoteBtn">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Note
+      </button>
+      <div class="search-box">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchInput" placeholder="Search notes..." />
+      </div>
+    </div>
+
+    <div class="notes-list" id="notesList"></div>
+  </aside>
+
+  <!-- Main Editor -->
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn mobile-menu-btn" id="menuBtn" aria-label="Open Notes List">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <span class="save-status"><span class="status-dot"></span><span id="saveText">Saved locally</span></span>
+      </div>
+
+      <div style="display:flex; gap:6px;">
+        <button class="icon-btn" id="copyBtn" title="Copy Note">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+        </button>
+        <button class="icon-btn" id="downloadBtn" title="Download .txt">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Free Human-Like Voice Studio -->
+    <section class="voice-bar" aria-label="Text to Speech Controls">
+      <div class="voice-controls-group">
+        <button class="tts-btn" id="playPauseBtn">
+          <svg id="playIcon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span id="playBtnLabel">Listen</span>
+        </button>
+        <button class="tts-btn" id="stopBtn" disabled title="Stop">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+        </button>
+      </div>
+
+      <div class="voice-select-wrap">
+        <svg width="16" height="16" style="color:#a78bfa; flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+        <select class="voice-select" id="voiceSelect" title="Select Voice">
+          <option value="">Loading natural voices...</option>
+        </select>
+      </div>
+
+      <div class="sliders-group">
+        <label class="slider-item">
+          <span>Speed</span>
+          <input type="range" id="rateSlider" min="0.6" max="1.6" step="0.05" value="1.0" />
+          <span id="rateVal">1.0x</span>
+        </label>
+        <label class="slider-item">
+          <span>Pitch</span>
+          <input type="range" id="pitchSlider" min="0.8" max="1.2" step="0.05" value="1.0" />
+          <span id="pitchVal">1.0</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Live Speaking Indicator -->
+    <div class="speaking-banner" id="speakingBanner">
+      <div style="display:flex; align-items:center;">
+        <div class="wave-bars"><span></span><span></span><span></span><span></span></div>
+        <span id="speakingStatusText">Reading note aloud...</span>
+      </div>
+      <span style="font-size:0.75rem; opacity:0.85;">Tip: Highlight text to listen to a selection</span>
+    </div>
+
+    <!-- Note Canvas -->
+    <div class="editor-container">
+      <input type="text" class="note-title-input" id="noteTitle" placeholder="Note title..." />
+      <textarea class="note-body-input" id="noteBody" placeholder="Start typing your note here... Then click 'Listen' above to hear it read aloud in a natural human voice."></textarea>
+    </div>
+
+    <footer class="editor-footer">
+      <span id="wordCount">0 words · 0 chars</span>
+      <span id="lastUpdated">Just now</span>
+    </footer>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // --- State & Storage ---
+    const STORAGE_KEY = 'vocalnote_notes_v1';
+    const PREFS_KEY = 'vocalnote_dark_prefs_v1';
+
+    let notes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    let prefs = JSON.parse(localStorage.getItem(PREFS_KEY)) || {
+      theme: 'dark',
+      voiceURI: '',
+      rate: 1.0,
+      pitch: 1.0
+    };
+    let activeNoteId = null;
+
+    if (notes.length === 0) {
+      notes = [{
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        title: 'Welcome to VocalNote Dark',
+        body: 'Write ideas, meeting notes, or study guides in a distraction-free dark workspace—and listen to them hands-free.\n\nPro Tips:\n1. Open the Voice dropdown above to pick from Natural, Neural, Google, or Apple human-like voices installed on your device.\n2. Highlight any specific paragraph and press Listen to read only that section.\n3. Click the contrast icon in the top-left to switch between Obsidian Dark and Pitch-Black OLED mode.',
+        updatedAt: Date.now()
+      }];
+      saveNotes();
+    }
+
+    // --- DOM Elements ---
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('backdrop');
+    const menuBtn = document.getElementById('menuBtn');
+    const themeToggle = document.getElementById('themeToggle');
+    const newNoteBtn = document.getElementById('newNoteBtn');
+    const searchInput = document.getElementById('searchInput');
+    const notesList = document.getElementById('notesList');
+    const noteTitle = document.getElementById('noteTitle');
+    const noteBody = document.getElementById('noteBody');
+    const saveText = document.getElementById('saveText');
+    const wordCount = document.getElementById('wordCount');
+    const lastUpdated = document.getElementById('lastUpdated');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const toast = document.getElementById('toast');
+
+    // TTS Elements
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const playBtnLabel = document.getElementById('playBtnLabel');
+    const playIcon = document.getElementById('playIcon');
+    const stopBtn = document.getElementById('stopBtn');
+    const voiceSelect = document.getElementById('voiceSelect');
+    const rateSlider = document.getElementById('rateSlider');
+    const rateVal = document.getElementById('rateVal');
+    const pitchSlider = document.getElementById('pitchSlider');
+    const pitchVal = document.getElementById('pitchVal');
+    const speakingBanner = document.getElementById('speakingBanner');
+    const speakingStatusText = document.getElementById('speakingStatusText');
+
+    // --- Theme (Obsidian Dark <-> Pure OLED Black) ---
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      prefs.theme = theme;
+      localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+    }
+    applyTheme(prefs.theme);
+
+    themeToggle.addEventListener('click', () => {
+      const next = prefs.theme === 'dark' ? 'midnight' : 'dark';
+      applyTheme(next);
+      showToast(next === 'midnight' ? 'Pitch-Black OLED mode' : 'Obsidian Dark mode');
+    });
+
+    // --- Mobile Drawer ---
+    function toggleSidebar(open) {
+      sidebar.classList.toggle('open', open);
+      backdrop.classList.toggle('show', open);
+    }
+    menuBtn.addEventListener('click', () => toggleSidebar(true));
+    backdrop.addEventListener('click', () => toggleSidebar(false));
+
+    // --- Helpers ---
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function formatDate(ts) {
+      const d = new Date(ts);
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) +
+        ' · ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function saveNotes() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+    }
+
+    function updateStats() {
+      const text = noteBody.value.trim();
+      const words = text ? text.split(/\s+/).length : 0;
+      wordCount.textContent = `${words} word${words === 1 ? '' : 's'} · ${noteBody.value.length} chars`;
+    }
+
+    // --- Render & Select Notes ---
+    function renderNotesList(filter = '') {
+      const q = filter.toLowerCase();
+      const filtered = notes
+        .filter(n => n.title.toLowerCase().includes(q) || n.body.toLowerCase().includes(q))
+        .sort((a, b) => b.updatedAt - a.updatedAt);
+
+      notesList.innerHTML = '';
+      if (filtered.length === 0) {
+        notesList.innerHTML = `<p style="text-align:center;color:var(--text-muted);font-size:0.85rem;padding:24px 8px;">No matching notes</p>`;
+        return;
+      }
+
+      filtered.forEach(note => {
+        const card = document.createElement('div');
+        card.className = `note-card ${note.id === activeNoteId ? 'active' : ''}`;
+        card.innerHTML = `
+          <div class="note-card-title">${escapeHtml(note.title || 'Untitled Note')}</div>
+          <div class="note-card-preview">${escapeHtml(note.body || 'No additional text')}</div>
+          <div class="note-card-meta"><span>${formatDate(note.updatedAt)}</span></div>
+          <button class="delete-note-btn" title="Delete note" aria-label="Delete note">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        `;
+
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('.delete-note-btn')) return;
+          selectNote(note.id);
+          toggleSidebar(false);
+        });
+
+        card.querySelector('.delete-note-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteNote(note.id);
+        });
+
+        notesList.appendChild(card);
+      });
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    }
+
+    function selectNote(id) {
+      stopSpeech();
+      activeNoteId = id;
+      const note = notes.find(n => n.id === id);
+      if (!note) return;
+      noteTitle.value = note.title;
+      noteBody.value = note.body;
+      lastUpdated.textContent = 'Updated ' + formatDate(note.updatedAt);
+      updateStats();
+      renderNotesList(searchInput.value);
+    }
+
+    function createNote() {
+      stopSpeech();
+      const newNote = {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        title: '',
+        body: '',
+        updatedAt: Date.now()
+      };
+      notes.unshift(newNote);
+      saveNotes();
+      selectNote(newNote.id);
+      toggleSidebar(false);
+      noteTitle.focus();
+    }
+
+    function deleteNote(id) {
+      if (notes.length === 1) {
+        notes[0].title = '';
+        notes[0].body = '';
+        notes[0].updatedAt = Date.now();
+        saveNotes();
+        selectNote(notes[0].id);
+        showToast('Note cleared');
+        return;
+      }
+      notes = notes.filter(n => n.id !== id);
+      saveNotes();
+      if (activeNoteId === id) {
+        selectNote(notes[0].id);
+      } else {
+        renderNotesList(searchInput.value);
+      }
+      showToast('Note deleted');
+    }
+
+    // --- Auto-save ---
+    let saveTimer;
+    function handleInput() {
+      const note = notes.find(n => n.id === activeNoteId);
+      if (!note) return;
+      note.title = noteTitle.value;
+      note.body = noteBody.value;
+      note.updatedAt = Date.now();
+      saveText.textContent = 'Saving...';
+      updateStats();
+
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        saveNotes();
+        renderNotesList(searchInput.value);
+        saveText.textContent = 'Saved locally';
+        lastUpdated.textContent = 'Updated ' + formatDate(note.updatedAt);
+      }, 250);
+    }
+
+    noteTitle.addEventListener('input', handleInput);
+    noteBody.addEventListener('input', handleInput);
+    newNoteBtn.addEventListener('click', createNote);
+    searchInput.addEventListener('input', (e) => renderNotesList(e.target.value));
+
+    copyBtn.addEventListener('click', async () => {
+      const full = `${noteTitle.value}\n\n${noteBody.value}`.trim();
+      if (!full) return;
+      await navigator.clipboard.writeText(full);
+      showToast('Copied to clipboard');
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const title = (noteTitle.value || 'note').trim();
+      const blob = new Blob([`${title}\n\n${noteBody.value}`], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${title.replace(/[^a-z0-9_-]/gi, '_')}.txt`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    // --- Natural Human-Like Text-to-Speech Engine ---
+    const synth = window.speechSynthesis;
+    let voices = [];
+    let isSpeaking = false;
+    let isPaused = false;
+    let utteranceQueue = [];
+    let currentChunkIndex = 0;
+
+    function scoreVoice(v) {
+      const name = v.name.toLowerCase();
+      let score = 0;
+      if (v.lang.startsWith('en')) score += 50;
+      if (name.includes('natural')) score += 40;
+      if (name.includes('neural')) score += 40;
+      if (name.includes('online')) score += 30;
+      if (name.includes('google')) score += 25;
+      if (name.includes('enhanced') || name.includes('premium')) score += 25;
+      if (name.includes('samantha') || name.includes('daniel') || name.includes('aria') || name.includes('guy') || name.includes('jenny') || name.includes('serena')) score += 20;
+      return score;
+    }
+
+    function populateVoices() {
+      const rawVoices = synth.getVoices();
+      if (!rawVoices.length) return;
+
+      voices = [...rawVoices].sort((a, b) => scoreVoice(b) - scoreVoice(a));
+      voiceSelect.innerHTML = '';
+
+      voices.forEach(voice => {
+        const opt = document.createElement('option');
+        opt.value = voice.voiceURI;
+        const cleanName = voice.name
+          .replace(/Microsoft |Google |Apple /g, '')
+          .replace(/Online \(Natural\) - /g, '★ Natural: ');
+        opt.textContent = `${cleanName} (${voice.lang})`;
+        voiceSelect.appendChild(opt);
+      });
+
+      if (prefs.voiceURI && voices.some(v => v.voiceURI === prefs.voiceURI)) {
+        voiceSelect.value = prefs.voiceURI;
+      } else if (voices[0]) {
+        voiceSelect.value = voices[0].voiceURI;
+      }
+    }
+
+    populateVoices();
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = populateVoices;
+    }
+
+    voiceSelect.addEventListener('change', () => {
+      prefs.voiceURI = voiceSelect.value;
+      localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+      if (isSpeaking) {
+        const wasPlaying = !isPaused;
+        stopSpeech();
+        if (wasPlaying) startSpeech();
+      }
+    });
+
+    rateSlider.value = prefs.rate;
+    rateVal.textContent = Number(prefs.rate).toFixed(2).replace(/\.00$/, '.0') + 'x';
+    pitchSlider.value = prefs.pitch;
+    pitchVal.textContent = Number(prefs.pitch).toFixed(2).replace(/\.00$/, '.0');
+
+    rateSlider.addEventListener('input', () => {
+      prefs.rate = parseFloat(rateSlider.value);
+      rateVal.textContent = prefs.rate.toFixed(1) + 'x';
+      localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+    });
+
+    pitchSlider.addEventListener('input', () => {
+      prefs.pitch = parseFloat(pitchSlider.value);
+      pitchVal.textContent = prefs.pitch.toFixed(1);
+      localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+    });
+
+    function splitIntoSentences(text) {
+      return text
+        .replace(/\n+/g, '. ')
+        .match(/[^.!?]+[.!?]*\s*/g)
+        ?.map(s => s.trim())
+        .filter(Boolean) || [];
+    }
+
+    function updatePlayerUI() {
+      if (isSpeaking && !isPaused) {
+        playPauseBtn.classList.add('playing');
+        playBtnLabel.textContent = 'Pause';
+        playIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+        stopBtn.disabled = false;
+        speakingBanner.classList.add('active');
+        speakingStatusText.textContent = 'Reading note aloud...';
+      } else if (isSpeaking && isPaused) {
+        playPauseBtn.classList.remove('playing');
+        playBtnLabel.textContent = 'Resume';
+        playIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+        stopBtn.disabled = false;
+        speakingBanner.classList.add('active');
+        speakingStatusText.textContent = 'Paused';
+      } else {
+        playPauseBtn.classList.remove('playing');
+        playBtnLabel.textContent = 'Listen';
+        playIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+        stopBtn.disabled = true;
+        speakingBanner.classList.remove('active');
+      }
+    }
+
+    function speakNextChunk() {
+      if (currentChunkIndex >= utteranceQueue.length) {
+        stopSpeech();
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(utteranceQueue[currentChunkIndex]);
+      const selectedVoice = voices.find(v => v.voiceURI === voiceSelect.value);
+      if (selectedVoice) utterance.voice = selectedVoice;
+      utterance.rate = prefs.rate;
+      utterance.pitch = prefs.pitch;
+
+      utterance.onend = () => {
+        if (!isSpeaking) return;
+        currentChunkIndex++;
+        speakNextChunk();
+      };
+
+      utterance.onerror = (e) => {
+        if (e.error !== 'interrupted' && e.error !== 'canceled') {
+          stopSpeech();
+          showToast('Voice playback interrupted');
+        }
+      };
+
+      synth.speak(utterance);
+    }
+
+    function startSpeech() {
+      if (!('speechSynthesis' in window)) {
+        showToast('Speech synthesis not supported in this browser');
+        return;
+      }
+
+      const start = noteBody.selectionStart;
+      const end = noteBody.selectionEnd;
+      const selectedText = start !== end ? noteBody.value.substring(start, end).trim() : '';
+
+      const fullText = selectedText || [noteTitle.value.trim(), noteBody.value.trim()].filter(Boolean).join('. ');
+      if (!fullText) {
+        showToast('Write some text first to listen');
+        return;
+      }
+
+      synth.cancel();
+      utteranceQueue = splitIntoSentences(fullText);
+      currentChunkIndex = 0;
+      isSpeaking = true;
+      isPaused = false;
+      updatePlayerUI();
+      speakNextChunk();
+    }
+
+    function stopSpeech() {
+      isSpeaking = false;
+      isPaused = false;
+      utteranceQueue = [];
+      currentChunkIndex = 0;
+      synth.cancel();
+      updatePlayerUI();
+    }
+
+    playPauseBtn.addEventListener('click', () => {
+      if (!isSpeaking) {
+        startSpeech();
+      } else if (!isPaused) {
+        synth.pause();
+        isPaused = true;
+        updatePlayerUI();
+      } else {
+        synth.resume();
+        isPaused = false;
+        updatePlayerUI();
+      }
+    });
+
+    stopBtn.addEventListener('click', stopSpeech);
+    window.addEventListener('beforeunload', () => synth.cancel());
+
+    selectNote(notes[0].id);
+
+    // --- PWA Service Worker Registration ---
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('VocalNote SW registered', reg.scope))
+          .catch((err) => console.warn('SW registration failed', err));
+      });
+    }
+  </script>
+</body>
+</html>
